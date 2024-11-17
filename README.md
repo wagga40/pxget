@@ -104,7 +104,6 @@ When using the `-a` or `--array` option, the script will output the IP addresses
 - **IPs**: Comma-separated list of associated IP addresses.
 - **Type**: Indicates whether the object is a VM or a container.
 - **ID**: The VMID of the object in Proxmox.
-```
 
 ## Author
 
