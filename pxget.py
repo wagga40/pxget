@@ -1,5 +1,7 @@
 import argparse
 from proxmoxer import ProxmoxAPI
+from rich.table import Table
+from rich.console import Console
 from getpass import getpass
 import json
 
@@ -78,6 +80,9 @@ def parse_arguments():
     parser.add_argument("-u", "--user", required=False, default="root@pam", help="Proxmox username (default: root@pam)")
     parser.add_argument("-p", "--password", help="Proxmox password (if not provided, will prompt interactively)")
     parser.add_argument("-o", "--output", help="Save collected data to a JSON file")
+    output_format = parser.add_mutually_exclusive_group()
+    output_format.add_argument("-a", "--array", action="store_true", help="Print as an array")
+    output_format.add_argument("-j", "--jq", action="store_true", default=True, help="Print as JQ compatible JSON")
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -89,10 +94,36 @@ if __name__ == '__main__':
 
     manager = ProxmoxManager(proxmox_server, user, password)
     
-    print("Fetching VM and Container IP addresses...")
     object_ips = manager.get_objects_ips()
     if args.output:
         with open(args.output, 'w') as outfile:
             json.dump(object_ips, outfile, indent=4)
-    print(object_ips)
-    
+
+    if args.array:
+        # Create table headers
+        table_data = [["Name", "IPs", "Type", "ID"]]
+        
+        # Add data rows sorted by ID
+        sorted_items = sorted(object_ips.items(), key=lambda x: x[1]['id'])
+        for name, details in sorted_items:
+            ips_str = ",".join(details['ips'])
+            table_data.append([
+                name,
+                ips_str,
+                details['type'],
+                str(details['id'])
+            ])
+
+        table = Table()
+        table.add_column("Name")
+        table.add_column("IPs") 
+        table.add_column("Type")
+        table.add_column("ID")
+        
+        for row in table_data[1:]:
+            table.add_row(*row)
+            
+        console = Console()
+        console.print(table)
+    else:
+        print(json.dumps(object_ips, indent=4, separators=(',', ':')))
