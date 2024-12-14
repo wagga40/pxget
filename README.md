@@ -40,6 +40,15 @@ python script.py -s <PROXMOX_SERVER> [-u <USER>] [-p <PASSWORD>] [-o <OUTPUT_FIL
 - `-a`, `--array`: Print the output as a formatted table in the console.
 - `-j`, `--jq`: Print as JQ compatible JSON (default).
 
+#### Sorting Output
+
+You can sort the output based on different fields using the `--sort` option:
+
+- `name`: Sort by the name of the VM or container.
+- `id`: Sort by the VMID (default).
+- `ips`: Sort by the IP addresses.
+- `type`: Sort by the type (`vm` or `container`).
+
 ### Examples
 
 1. **Fetch IPs and Display in Console (JSON format)**
