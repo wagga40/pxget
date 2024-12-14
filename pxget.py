@@ -83,6 +83,12 @@ def parse_arguments():
     output_format = parser.add_mutually_exclusive_group()
     output_format.add_argument("-a", "--array", action="store_true", help="Print as an array")
     output_format.add_argument("-j", "--jq", action="store_true", default=True, help="Print as JQ compatible JSON")
+    parser.add_argument("-S", "--start", action="store_true", help="Start a VM or container")
+    parser.add_argument("-T", "--stop", action="store_true", help="Stop a VM or container")
+    parser.add_argument("-n", "--name", help="Specify the name of the VM or container to start or stop")
+    # add a group for sorting the output
+    sort_group = parser.add_mutually_exclusive_group()
+    sort_group.add_argument("--sort", choices=["name", "id", "ips", "type"], default="id", help="Sort the output by the specified field")
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -102,24 +108,25 @@ if __name__ == '__main__':
     if args.array:
         # Create table headers
         table_data = [["Name", "IPs", "Type", "ID"]]
+
+        sorted_items = sorted(object_ips.items(), key=lambda x: x[1][args.sort])
         
         # Add data rows sorted by ID
-        sorted_items = sorted(object_ips.items(), key=lambda x: x[1]['id'])
         for name, details in sorted_items:
             ips_str = ",".join(details['ips'])
             table_data.append([
+                str(details['id']),
                 name,
                 ips_str,
-                details['type'],
-                str(details['id'])
+                details['type']
             ])
 
         table = Table()
+        table.add_column("ID")        
         table.add_column("Name")
         table.add_column("IPs") 
         table.add_column("Type")
-        table.add_column("ID")
-        
+
         for row in table_data[1:]:
             table.add_row(*row)
             
@@ -127,3 +134,8 @@ if __name__ == '__main__':
         console.print(table)
     else:
         print(json.dumps(object_ips, indent=4, separators=(',', ':')))
+
+    if args.start and args.name:
+        manager.start_object(args.name)
+    elif args.stop and args.name:
+        manager.stop_object(args.name)
