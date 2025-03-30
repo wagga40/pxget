@@ -1,6 +1,6 @@
 # PXGET
 
-A Python script to fetch IP addresses of VMs and containers from a Proxmox Virtual Environment (PVE). The script uses the `proxmoxer` library to connect to the Proxmox API, retrieve network information, and output the results either to the console or to a JSON file.
+A Python script to fetch IP addresses and MAC addresses of VMs and containers from a Proxmox Virtual Environment (PVE). The script uses the `proxmoxer` library to connect to the Proxmox API, retrieve network information, and output the results in various formats.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ A Python script to fetch IP addresses of VMs and containers from a Proxmox Virtu
 ### Command-Line Arguments
 
 ```bash
-python script.py -s <PROXMOX_SERVER> [-u <USER>] [-p <PASSWORD>] [-o <OUTPUT_FILE>] [-a | -j]
+python pxget.py -s <PROXMOX_SERVER> [-u <USER>] [-p <PASSWORD>] [-o <OUTPUT_FILE>] [-a | -j | -m] [-S | -T] [-n <NAME>] [--sort <FIELD>]
 ```
 
 - `-s`, `--server` (required): The IP address or hostname of the Proxmox server.
@@ -39,45 +39,53 @@ python script.py -s <PROXMOX_SERVER> [-u <USER>] [-p <PASSWORD>] [-o <OUTPUT_FIL
 - `-o`, `--output`: The path to save the output as a JSON file.
 - `-a`, `--array`: Print the output as a formatted table in the console.
 - `-j`, `--jq`: Print as JQ compatible JSON (default).
-
-#### Sorting Output
-
-You can sort the output based on different fields using the `--sort` option:
-
-- `name`: Sort by the name of the VM or container.
-- `id`: Sort by the VMID (default).
-- `ips`: Sort by the IP addresses.
-- `type`: Sort by the type (`vm` or `container`).
+- `-m`, `--markdown`: Print as Markdown table.
+- `-S`, `--start`: Start a VM or container.
+- `-T`, `--stop`: Stop a VM or container.
+- `-n`, `--name`: Specify the name of the VM or container to start or stop.
+- `--sort`: Sort the output by field (name, id, ips, or type). Defaults to id.
 
 ### Examples
 
 1. **Fetch IPs and Display in Console (JSON format)**
 
     ```bash
-    python script.py -s 192.168.0.XX
+    python pxget.py -s 192.168.0.XX
     ```
-
-    This command will prompt for the password and then display the IP addresses of all VMs and containers in JSON format. By default, the username used for connection is `root@pam`.
 
 2. **Fetch IPs and Save to JSON File**
 
     ```bash
-    python script.py -s 192.168.0.XX -u root@pam -o output.json
+    python pxget.py -s 192.168.0.XX -u root@pam -o output.json
     ```
-
-    This command will fetch the IPs and save the results to `output.json`.
 
 3. **Fetch IPs and Display as Table**
 
     ```bash
-    python script.py -s 192.168.0.XX -a
+    python pxget.py -s 192.168.0.XX -a
     ```
 
-    This command will prompt for the password and then display the IP addresses of all VMs and containers in a formatted table.
+4. **Fetch IPs and Display as Markdown**
+
+    ```bash
+    python pxget.py -s 192.168.0.XX -m
+    ```
+
+5. **Start a VM or Container**
+
+    ```bash
+    python pxget.py -s 192.168.0.XX -S -n vm_name
+    ```
+
+6. **Stop a VM or Container**
+
+    ```bash
+    python pxget.py -s 192.168.0.XX -T -n vm_name
+    ```
 
 ## Output Format
 
-The script outputs the IP addresses in the following formats:
+The script outputs the information in the following formats:
 
 ### JSON (JQ compatible)
 
@@ -85,35 +93,44 @@ The script outputs the IP addresses in the following formats:
 {
     "vm_name_1": {
         "ips": ["192.168.0.2", "192.168.0.3"],
+        "macs": ["00:11:22:33:44:55", "66:77:88:99:AA:BB"],
         "type": "vm",
         "id": 101
     },
     "container_name_1": {
         "ips": ["192.168.0.4"],
+        "macs": ["00:11:22:33:44:55"],
         "type": "container",
         "id": 102
     }
 }
 ```
 
-- **`ips`**: List of IP addresses associated with the VM or container.
-- **`type`**: Indicates whether the object is a VM or a container.
-- **`id`**: The VMID of the object in Proxmox.
+### Table (Rich Console)
 
-### Table
+When using the `-a` or `--array` option, the script will output the information in a formatted table:
 
-When using the `-a` or `--array` option, the script will output the IP addresses in a formatted table as shown below:
+| ID  | Name              | IPs                     | MACs                    | Type        |
+|-----|-------------------|-------------------------|-------------------------|-------------|
+| 101 | vm_name_1         | 192.168.0.2,192.168.0.3 | 00:11:22:33:44:55,...   | vm          |
+| 102 | container_name_1  | 192.168.0.4             | 00:11:22:33:44:55       | container   |
 
-| Name              | IPs                     | Type        | ID  |
-|-------------------|-------------------------|-------------|-----|
-| vm_name_1         | 192.168.0.2,192.168.0.3 | vm          | 101 |
-| container_name_1  | 192.168.0.4             | container   | 102 |
+### Markdown
 
-- **Name**: The name of the VM or container.
-- **IPs**: Comma-separated list of associated IP addresses.
-- **Type**: Indicates whether the object is a VM or a container.
-- **ID**: The VMID of the object in Proxmox.
+When using the `-m` or `--markdown` option, the script will output the information in Markdown table format:
+
+```markdown
+# Proxmox VMs and Containers
+
+| ID | Name | IPs | MACs | Type |
+|:--:|:-----|:----|:-----|:----:|
+| 101 | vm_name_1 | 192.168.0.2<br>192.168.0.3 | 00:11:22:33:44:55<br>66:77:88:99:AA:BB | vm |
+| 102 | container_name_1 | 192.168.0.4 | 00:11:22:33:44:55 | container |
+```
 
 ## Author
 
 - [wagga40](https://github.com/wagga40)
+
+
+
