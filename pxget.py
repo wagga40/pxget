@@ -114,8 +114,13 @@ if __name__ == '__main__':
     proxmox_server = args.server
     user = args.user
     password = args.password if args.password else get_password()
-
-    manager = ProxmoxManager(proxmox_server, user, password)
+    
+    # Handle Exceptions
+    try:
+        manager = ProxmoxManager(proxmox_server, user, password)
+    except Exception as e:
+        print(f"Error: {e}")
+        exit(1)
     
     object_ips = manager.get_objects_ips()
     if args.output:
@@ -150,7 +155,7 @@ if __name__ == '__main__':
         for row in table_data[1:]:
             table.add_row(*row)
             
-        console = Console()
+        console = Console(emoji=False)
         console.print(table)
     elif args.markdown:
         md_content = "# Proxmox VMs and Containers\n\n"
